@@ -4,9 +4,9 @@
 
 #include<iostream>
 //#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "ctype.h"
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 
 #include "scan.h"
 using namespace std;
@@ -58,6 +58,7 @@ token scan() {
         case '/': c = getchar(); return t_div;
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
+        case '<': 
         default:
             //printf("error\n");
             cout << "error\n" << endl;
