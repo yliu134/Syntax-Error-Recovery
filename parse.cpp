@@ -38,12 +38,15 @@ void program ();
 void stmt_list ();
 void stmt ();
 void expr ();
+void expr_tail();
 void term_tail ();
 void term ();
 void factor_tail ();
 void factor ();
+void relation_op();
 void add_op ();
 void mul_op ();
+void relation();
 
 void program () {
     switch (input_token) {
@@ -93,6 +96,18 @@ void stmt () {
             match (t_write);
             expr ();
             break;
+        case t_if:
+            relation();
+            stmt_list ();
+            match(t_fi);
+            break;
+        case t_do:
+            stmt_list();
+            match(od);
+            break;
+        case t_check:
+            relation();
+            break;
         default: error ();
     }
 }
@@ -107,6 +122,26 @@ void expr () {
             term_tail ();
             break;
         default: error ();
+    }
+}
+
+void expr_tail(){
+    switch (input_token) {
+        case t_doubleequal:
+        case t_notequal:
+        case t_smaller:
+        case t_greater: 
+        case t_smallerequal: 
+        case t_greaterequal:
+            expr();
+            break;
+        case t_id:
+        case t_read:
+        case t_write:
+        case t_eof:
+            break; 
+        default: error ();
+        //predict set ET -> epsilon = SL
     }
 }
 
@@ -185,6 +220,29 @@ void factor () {
     }
 }
 
+void relation_op(){
+    switch(input_token){
+        case t_doubleequal:
+        match(t_doubleequal);
+            break;
+        case t_notequal:
+            match(t_notequal);
+            break;
+        case t_smaller:
+            match(t_smaller);
+            break;
+        case t_greater: 
+            match(t_greater);
+            break;
+        case t_smallerequal: 
+            match(t_smallerequal);
+            break;
+        case t_greaterequal:
+            match(t_greaterequal);
+            break;
+    }
+}
+
 void add_op () {
     switch (input_token) {
         case t_add:
@@ -211,6 +269,11 @@ void mul_op () {
             break;
         default: error ();
     }
+}
+
+void relation(){
+    expr();
+    epr_tail();
 }
 
 int main () {
