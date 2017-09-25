@@ -10,8 +10,10 @@
 #include "scan.h"
 using namespace std;
 
-const char* names[] = {"read", "write", "id", "literal", "gets",
-                       "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+const char* names[] = {"read", "write", "id", "literal", "gets", "if", 
+    "fi", "do", "od", "equal", "colonequal", "doubleequal", "notequal", "smaller", 
+    "greater", "smallerequal","greaterequal", 
+    "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
 static token input_token;
 
@@ -103,7 +105,7 @@ void stmt () {
             break;
         case t_do:
             stmt_list();
-            match(od);
+            match(t_od);
             break;
         case t_check:
             relation();
@@ -273,7 +275,7 @@ void mul_op () {
 
 void relation(){
     expr();
-    epr_tail();
+    expr_tail();
 }
 
 int main () {
