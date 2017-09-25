@@ -6,8 +6,8 @@
 */
 
 #include <iostream>
-#include "stdlib.h"
 #include "scan.h"
+#include <cstdlib>
 using namespace std;
 
 const char* names[] = {"read", "write", "id", "literal", "gets", "if", 
