@@ -10,9 +10,9 @@
 #include <cstdlib>
 using namespace std;
 
-const char* names[] = {"read", "write", "id", "literal", "gets", "if", 
-    "fi", "do", "od", "equal", "colonequal", "doubleequal", "notequal", "smaller", 
-    "greater", "smallerequal","greaterequal", 
+const char* names[] = {"read", "write", "id", "literal", "gets", "if",
+    "fi", "do", "od", "equal", "colonequal", "doubleequal", "notequal", "smaller",
+    "greater", "smallerequal","greaterequal",
     "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
 static token input_token;
@@ -24,8 +24,9 @@ void error () {
 
 void match (token expected) {
     if (input_token == expected) {
+        cout << "matched" << names[input_token]<< endl;
         //printf ("matched %s", names[input_token]);
-        cout << "match " <<  names[input_token];
+        // cout << "match " <<  names[input_token];
         if (input_token == t_id || input_token == t_literal)
             //printf (": %s", token_image);
             cout << ": " <<  token_image;
@@ -56,6 +57,7 @@ void program () {
         case t_read:
         case t_write:
         case t_eof:
+            cout << "predict program -->stmt_list eof" << endl;
             //printf ("predict program --> stmt_list eof\n");
             stmt_list ();
             match (t_eof);
@@ -70,6 +72,7 @@ void stmt_list () {
         case t_read:
         case t_write:
             //printf ("predict stmt_list --> stmt stmt_list\n");
+            cout << "predict stmt_list --> stmt stmt_list" << endl;
             stmt ();
             stmt_list ();
             break;
@@ -126,14 +129,15 @@ void expr () {
         default: error ();
     }
 }
+// the new built method by us
 
 void expr_tail(){
     switch (input_token) {
         case t_doubleequal:
         case t_notequal:
         case t_smaller:
-        case t_greater: 
-        case t_smallerequal: 
+        case t_greater:
+        case t_smallerequal:
         case t_greaterequal:
             expr();
             break;
@@ -141,7 +145,7 @@ void expr_tail(){
         case t_read:
         case t_write:
         case t_eof:
-            break; 
+            break;
         default: error ();
         //predict set ET -> epsilon = SL
     }
@@ -221,7 +225,7 @@ void factor () {
         default: error ();
     }
 }
-
+// the new built one
 void relation_op(){
     switch(input_token){
         case t_doubleequal:
@@ -233,15 +237,16 @@ void relation_op(){
         case t_smaller:
             match(t_smaller);
             break;
-        case t_greater: 
+        case t_greater:
             match(t_greater);
             break;
-        case t_smallerequal: 
+        case t_smallerequal:
             match(t_smallerequal);
             break;
         case t_greaterequal:
             match(t_greaterequal);
             break;
+        default: error();
     }
 }
 
