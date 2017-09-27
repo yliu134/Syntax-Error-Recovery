@@ -4,11 +4,20 @@
     dies on invalid input.
     Michael L. Scott, 2008-2017.
 */
-
+#include <stdexcept>
 #include <iostream>
 #include "scan.h"
 #include <cstdlib>
 using namespace std;
+#include <string>
+
+class SyntaxException : public exception{
+    public:
+        const char * what(token token, const char* nonterminal) const throw()
+        {
+            return "Found token "+names[token]+" in " +nonterminal+" "+"\n";
+        }
+};
 
 const char* names[] = {"read", "write", "id", "literal", "gets", "if",
     "fi", "do", "od", "equal", "colonequal", "doubleequal", "notequal", "smaller",
