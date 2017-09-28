@@ -8,10 +8,11 @@
 #include <iostream>
 #include "scan.h"
 #include <cstdlib>
+#include <vector>
 using namespace std;
 #include <string>
 
-class SyntaxException : public exception{
+class SyntaxErrorException : public exception{
     public:
         const char * what(token token, const char* nonterminal) const throw()
         {
@@ -22,9 +23,18 @@ class SyntaxException : public exception{
 const char* names[] = {"read", "write", "id", "literal", "gets", "if",
     "fi", "do", "od", "equal", "colonequal", "doubleequal", "notequal", "smaller",
     "greater", "smallerequal","greaterequal",
-    "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+    "add", "sub", "mul", "div", "lparen", "rparen", "eof", "eps"};
 
 static token input_token;
+
+// Hard-coded first and follow sets
+typedef vector<token> token_set;
+token_set first_stmt {t_id, t_read, t_write, t_if, t_while};
+
+//Check if a token is in first or follow set of some category
+bool contains(token input, token_set theSet){
+    return find(begin(theSet), end(theSet), input != end(theSet));
+}
 
 void error () {
     cout << "Syntax error\n" << endl;
@@ -122,7 +132,20 @@ void stmt () {
         case t_check:
             relation();
             break;
-        default: error ();
+        default: //SyntaxErrorException e; throw e; //Throw the exception
+            while(!contains(input_token, first_stmt) 
+                ||!contains(input_token, follow_stmt) 
+                ||input_token != t_eof){
+                input_token = scan();
+            }
+            if(contains(input_token, first_stmt)){ 
+                stmt();
+                //And print error message???
+            }else if(contains(input_token, follow_stmt)){
+
+            }else{
+
+            } //If having reached eof
     }
 }
 
