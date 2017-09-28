@@ -38,7 +38,7 @@ bool contains(token input, token_set theSet){
 }
 
 void error () {
-    cout << "Syntax error\n" << endl;
+    cout << "Syntax error" << endl;
     exit (1);
 }
 
@@ -139,7 +139,7 @@ void stmt () {
                 input_token = scan();
             }
             if(contains(input_token, follow_stmt)){
-                stmt();
+                return;
             }else{
 
             } //If having reached eof
