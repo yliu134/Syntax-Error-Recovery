@@ -37,6 +37,9 @@ token scan() {
         else if (!strcmp(token_image, "od")) return t_od;
         else if (!strcmp(token_image, "if")) return t_if;
         else if (!strcmp(token_image, "fi")) return t_fi;
+        else if (!strcmp(token_image, "check")) return t_check;
+        else if (!strcmp(token_image, ":=")) return t_colonequal;
+        
         else return t_id;
     }
     else if (isdigit(c)) {
@@ -72,12 +75,12 @@ token scan() {
                 c = getchar();
                 return t_smallerequal;
             }else return t_smaller;
-        case '>': 
+        case '>':
             if(getchar() == '='){
                 c = getchar();
                 return t_greaterequal;
             }else return t_greater;
-        case '=': 
+        case '=':
             if(getchar() == '='){
                 c = getchar();
                 return t_doubleequal;

@@ -29,7 +29,8 @@ static token input_token;
 
 // Hard-coded first and follow sets
 typedef vector<token> token_set;
-token_set first_stmt {t_id, t_read, t_write, t_if, t_while};
+token_set first_stmt {t_id, t_read, t_write, t_if;
+token_set follow_stmt {};
 
 //Check if a token is in first or follow set of some category
 bool contains(token input, token_set theSet){
@@ -133,16 +134,12 @@ void stmt () {
             relation();
             break;
         default: //SyntaxErrorException e; throw e; //Throw the exception
-            while(!contains(input_token, first_stmt) 
-                ||!contains(input_token, follow_stmt) 
+            while(!contains(input_token, follow_stmt)
                 ||input_token != t_eof){
                 input_token = scan();
             }
-            if(contains(input_token, first_stmt)){ 
+            if(contains(input_token, follow_stmt)){
                 stmt();
-                //And print error message???
-            }else if(contains(input_token, follow_stmt)){
-
             }else{
 
             } //If having reached eof
