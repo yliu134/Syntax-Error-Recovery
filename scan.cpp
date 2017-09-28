@@ -39,7 +39,6 @@ token scan() {
         else if (!strcmp(token_image, "fi")) return t_fi;
         else if (!strcmp(token_image, "check")) return t_check;
         else if (!strcmp(token_image, ":=")) return t_colonequal;
-        
         else return t_id;
     }
     else if (isdigit(c)) {
