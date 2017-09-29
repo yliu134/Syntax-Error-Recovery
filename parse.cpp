@@ -9,33 +9,36 @@
 #include "scan.h"
 #include <cstdlib>
 #include <vector>
-using namespace std;
 #include <string>
+using std::string;
+using std::cin;
+using std::cout;
 
+/*
 class SyntaxErrorException : public exception{
     public:
         const char * what(token token, const char* nonterminal) const throw()
         {
-            return "Found token "+names[token]+" in " +nonterminal+" "+"\n";
+            // return "Found token "+names[token]+" in " +nonterminal+" "+"\n";
         }
-};
-
+};*/
+//replace colonequal and doubleequal
 const char* names[] = {"read", "write", "id", "literal", "gets", "if",
-    "fi", "do", "od", "equal", "colonequal", "doubleequal", "notequal", "smaller",
+    "fi", "do", "od", "equal", "notequal", "smaller",
     "greater", "smallerequal","greaterequal",
     "add", "sub", "mul", "div", "lparen", "rparen", "eof", "eps"};
 
 static token input_token;
 
 // Hard-coded first and follow sets
-typedef vector<token> token_set;
-token_set first_stmt {t_id, t_read, t_write, t_if;
-token_set follow_stmt {};
+// typedef vector<token> token_set;
+// token_set first_stmt {t_id, t_read, t_write, t_if;
+// token_set follow_stmt {};
 
 //Check if a token is in first or follow set of some category
-bool contains(token input, token_set theSet){
-    return find(begin(theSet), end(theSet), input != end(theSet));
-}
+// bool contains(token input, token_set theSet){
+//     return find(begin(theSet), end(theSet), input != end(theSet));
+// }
 
 void error () {
     cout << "Syntax error" << endl;
@@ -51,7 +54,7 @@ void match (token expected) {
             //printf (": %s", token_image);
             cout << ": " <<  token_image;
         //printf ("\n");
-        cout << "\n" << endl;
+        cout << "\n";
         input_token = scan ();
     }
     else error ();
@@ -134,6 +137,8 @@ void stmt () {
             relation();
             break;
         default: //SyntaxErrorException e; throw e; //Throw the exception
+            error();
+            /*
             while(!contains(input_token, follow_stmt)
                 ||input_token != t_eof){
                 input_token = scan();
@@ -143,6 +148,7 @@ void stmt () {
             }else{
 
             } //If having reached eof
+            */
     }
 }
 
@@ -162,7 +168,7 @@ void expr () {
 
 void expr_tail(){
     switch (input_token) {
-        case t_doubleequal:
+        case t_equal:
         case t_notequal:
         case t_smaller:
         case t_greater:
@@ -257,8 +263,8 @@ void factor () {
 // the new built one
 void relation_op(){
     switch(input_token){
-        case t_doubleequal:
-        match(t_doubleequal);
+        case t_equal:
+        match(t_equal);
             break;
         case t_notequal:
             match(t_notequal);
