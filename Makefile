@@ -9,5 +9,8 @@ parse: parse.o scan.o
 clean:
 	rm *.o parse
 
+test: parse
+	./parse < input.txt
+
 parse.o: scan.h
 scan.o: scan.h
