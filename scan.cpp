@@ -52,7 +52,7 @@ token scan() {
         else return t_id;
     }
     else if (isdigit(c)) {
-      cout << "Digit\n";
+      //cout << "Digit\n";
         do {
             token_image[i++] = c;
             //cin >> c;
