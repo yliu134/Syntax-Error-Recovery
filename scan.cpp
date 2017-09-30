@@ -25,26 +25,29 @@ token scan() {
 
     /* skip white space */
     while (isspace(c)) {
-        cin >> c;
+        //cin >> c;
+        c=getchar();
     }
     cout << c << "\n";
     if (c == EOF)
         return t_eof;
 
     if (isalpha(c)) {
-      cout << "Alpha\n";
         do {
             token_image[i++] = c;
-            cin >> c;
+            c = getchar();
+            //cin >> c;
+            // cout << c << endl;
         } while (isalpha(c) || isdigit(c) || c == '_');
+        // cout << "done" << endl;
         token_image[i] = '\0';
-        if(token_image!=string("read")) return t_read;
-        else if (token_image!=string("write")) return t_write;
-        else if (token_image!=string("do")) return t_do;
-        else if (token_image!=string("od")) return t_od;
-        else if (token_image!=string("if")) return t_if;
-        else if (token_image!=string("fi")) return t_fi;
-        else if (token_image!=string("check")) return t_check;
+        if(token_image==string("read")) return t_read;
+        else if (token_image==string("write")) return t_write;
+        else if (token_image==string("do")) return t_do;
+        else if (token_image==string("od")) return t_od;
+        else if (token_image==string("if")) return t_if;
+        else if (token_image==string("fi")) return t_fi;
+        else if (token_image==string("check")) return t_check;
         //else if (token_image!=string(":=")) return t_gets;  //not colonequal
         else return t_id;
     }
@@ -52,7 +55,8 @@ token scan() {
       cout << "Digit\n";
         do {
             token_image[i++] = c;
-            cin >> c;
+            //cin >> c;
+            c = getchar();
         } while (isdigit(c));
         token_image[i] = '\0';
 
@@ -60,45 +64,71 @@ token scan() {
     }
     else switch (c) {
         // case ':':
-        //     cin >> c;
+        //     //cin >> c;
         //     if (c != '=') {
         //         //fprintf(stderr, "error\n");
         //         cout << "error\n";
         //         exit(1);
         //     } else {
-        //         cin >> c;
+        //         //cin >> c;
         //         return t_gets;
         //     }
         //     break;
+        /*
+        case '+': //cin >> c; return t_add;
+        case '-': //cin >> c; return t_sub;
+        case '*': //cin >> c; return t_mul;
+        case '/': //cin >> c; return t_div;
+        case '(': //cin >> c; return t_lparen;
+        case ')': //cin >> c; return t_rparen;
+        */
 
-        case '+': cin >> c; return t_add;
-        case '-': cin >> c; return t_sub;
-        case '*': cin >> c; return t_mul;
-        case '/': cin >> c; return t_div;
-        case '(': cin >> c; return t_lparen;
-        case ')': cin >> c; return t_rparen;
+        case '+': c = getchar(); return t_add;
+        case '-': c = getchar(); return t_sub;
+        case '*': c = getchar(); return t_mul;
+        case '/': c = getchar(); return t_div;
+        case '(': c = getchar(); return t_lparen;
+        case ')': c = getchar(); return t_rparen;
+        case '$': {
+          c = getchar();
+          if(c == '$'){
+            c = getchar();
+            return t_end;
+          }else cout << "error\n";
+        }
         //Relation operators added
-        case ':': {
-          cin >> c;
+        case ':':
+          //cin >> c;
+          c=getchar();
+          // cout << c << endl;
           if (c == '='){
-              cin >> c;
+              //cin >> c;
+              c=getchar();
               return t_gets;
             }
           cout << "error\n";
-          }
-        case '<': cin >> c;
+
+        case '<':
+            //cin >> c;
+            c=getchar();
             if (c == '>'){
-                cin >> c;
+                //cin >> c;
+                c=getchar();
                 return t_notequal;
             }else if(c == '='){
-                cin >> c;
+                //cin >> c;
+                c=getchar();
                 return t_smallerequal;
             }else return t_smaller;
-        case '>': cin >> c;
+        case '>':
+            //cin >> c;
+            c=getchar();
             if(c == '='){
                 return t_greaterequal;
             }else return t_greater;
-        case '=': cin >> c;
+        case '=':
+            //cin >> c;
+            c=getchar();
             if(c == '='){
                 return t_equal;
             }//remove double equal
