@@ -18,15 +18,6 @@ using std::cout;
 using std::endl;
 using std::noskipws;
 
-/*
-class SyntaxErrorException : public exception{
-    public:
-        const char * what(token token, const char* nonterminal) const throw()
-        {
-            // return "Found token "+names[token]+" in " +nonterminal+""+"\n";
-        }
-};*/
-
 const char* names[] = {"check", "read", "write", "id", "literal", "gets", "if",
 "fi", "do", "od", "equal", "notequal", "smaller",
 "greater", "smallerequal","greaterequal",
@@ -39,11 +30,12 @@ static token s_follow[] = {t_id, t_read, t_write, t_if, t_do, t_check, t_eof};
 static token r_follow[] = {t_id, t_read, t_write, t_if, t_do, t_check, t_eof, t_fi, t_rparen};
 static token e_follow[] = {t_id, t_read, t_write, t_if, t_do, t_check, t_eof, t_fi, t_rparen
                         , t_equal, t_notequal, t_smaller, t_greater, t_smallerequal, t_greaterequal};
-
+static string buffer = ""; //Keep track of the nonterminal currently being parsed
 string postIndent(string str, int tab){
   for(int i = 0; i <= tab; i++){
     str += " ";
   }
+  str += std::to_string(tab);
   return str;
 }
 string preIndent(string str, int tab){
@@ -62,10 +54,6 @@ string prefix(string str, string tail){
   return "prefix error";
 }
 
-/*for(std::string::size_type i = 0; i < str.size(); ++i) {
-    do_things_with(str[i]);
-}*/
-//Check if a token is in first or follow set of some category
 int contains(token t, token set[]){
   int i = 0;
   while(set[i]){
@@ -83,15 +71,13 @@ void error () {
 }
 
 string match (token expected) {
-    cout << "expected: " << names[expected] << "; actual: " << names[input_token] << endl;
     if (input_token == expected) {
-        cout << "Matched "<<names[expected] << endl;
-        // cout << "match " <<  names[input_token];
-        //if (input_token == t_id || input_token == t_literal) { }
-          input_token = scan ();
-          cout << "match next: "<<names[input_token] << endl;
+        //cout << "Matched "<<names[expected] << endl;
+        input_token = scan ();
+        //cout << "match next: "<<names[input_token] << endl;
     }
     else{
+      cout << "Token " << names[input_token] << ": do you mean " << names[expected] << "?"<< endl;
       throw string("match");
   }
 
@@ -139,19 +125,18 @@ string program () {
                 return str1+")\n";
             }
             default:
-            cout << "program wrong\n";
+            //cout << "program wrong\n";
             throw string("program");
             return "";
         }
     }catch(string e){
-        cout << "Not expecting " << names[input_token] << " in program"<< endl;
+        cout << "Not expecting " << names[input_token] << " in Program"<< endl;
         return "";
     }
 }
 
 string stmt_list () {
   cout << "SL: input token: " << names[input_token] << endl;
-  //tabNum++;
   switch (input_token) {
       case t_id:
       case t_check:
@@ -164,16 +149,16 @@ string stmt_list () {
         str1 += "("+stmt();
         str1 += stmt_list();
         str1 = postIndent(str1, tabNum);
-        str1 += ")\n";
+        str1 += ") sl\n";
 
         tabNum--;
         return str1;
       }
       case t_eof:
-        //tabNum--;
+        tabNum--;
         return "\n";          /*  epsilon production */
     default:
-      //tabNum--;
+      tabNum--;
       return "\n";
     }
 }
@@ -187,12 +172,7 @@ string stmt () {
             match (t_id);
             match (t_gets);
             string str1 = "( := (id "+getImage() +")" + relation();//Used to be expr()
-
-          //   str1 = "(id := " + str1 + ")\n";
-          //   for(int i = 0; i <= tabNum; i++){
-          //     str1 = " " + str1;
-          // }
-          tabNum--;
+            tabNum--;
           return str1;
       }
         case t_read:
@@ -205,7 +185,7 @@ string stmt () {
             string str1 = relation();//Used to be expr()
             str1 = postIndent(str1, tabNum);
           tabNum--;
-          return "(write " + str1 + ")\n";
+          return "(write " + str1 + ")write\n";
         }
         case t_if:{
           match(t_if);
@@ -217,7 +197,7 @@ string stmt () {
           str2 = postIndent(str2, tabNum);
           match(t_fi);
           tabNum--;
-          return str1 +"if[\n"+ str2 + "]) if lol\n";
+          return str1 +"if[\n"+ str2 + "]) fi\n";
         }
         case t_do:{
           match(t_do);
@@ -226,27 +206,30 @@ string stmt () {
           str1 = postIndent(str1, tabNum);
           match(t_od);
           tabNum--;
-          return "do["+ str1 + "]) odddd\n";
+          return "do["+ str1 + "]) od\n";
         }
         case t_check:{
           match(t_check);
-          string str1 = relation();
-          str1 = preIndent(str1, tabNum);
+          string str1 = "";
+          
+          str1 = postIndent(str1, tabNum);
+          str1 += relation();
           str1 = postIndent(str1, tabNum);
           tabNum--;
-          return "(check\n"+str1+")\n";
+          return "(check\n"+str1+")check\n";
         }
         default: //SyntaxErrorException e; throw e; //Throw the exception
-        cout << "statement wrong\n";
+        //cout << "statement wrong\n";
         error();
         tabNum--;
         return "";
       }
     }catch(string e){
-      if(e == "match") cout <<"Not expecting " << names[input_token] << " in statement" <<endl;
+      if(e == "match") cout <<"Not expecting " << names[input_token] << " in Statement" <<endl;
       else cout << "Not expecting " << names[input_token] << " in " << e << endl;
+      cout << "deleted: " << names[input_token] << endl;
       input_token = scan();
-      cout << "next: " << names[input_token] << endl;
+      //cout << "next: " << names[input_token] << endl;
       while(!contains(input_token, s_follow)
             &&input_token != t_eof){
             cout << "deleted: " << names[input_token] << endl;
@@ -255,7 +238,7 @@ string stmt () {
     }
     if(contains(input_token, s_follow)){
         hasError = 1;
-        cout << "follow token found" << endl;
+        cout << "follow token "<< names[input_token]<<" found" << endl;
         return "(error)\n";
     }else{} //If having reached eof
             return "";
@@ -273,7 +256,8 @@ string expr () {
     }catch(string e){
       if(e == "match") cout <<"Not expecting " << names[input_token] << " in expression" <<endl;
       else cout << "Not expecting " << names[input_token] << " in " << e << endl;
-      while(!contains(input_token, e_follow)
+      cout << "deleted: " << names[input_token] << endl;
+            while(!contains(input_token, e_follow)
             &&input_token != t_eof){
             cout << "deleted: " << names[input_token] << endl;
             input_token = scan();
@@ -282,7 +266,7 @@ string expr () {
         if(contains(input_token, e_follow)){
             hasError = 1;
             tabNum--;
-            cout << "follow token found" << endl;
+            cout << "follow token "<< names[input_token]<<" found" << endl;
             return "(error)\n";
         }else{
 
@@ -513,16 +497,12 @@ string relation(){
       string str1 = expr_tail();
       tabNum--;
       return "("+prefix(str2, str1)+ ")\n";
-      // for(int i = 0; i <= tabNum; i++){
-      //     str1 += " ";
-      // }
-      //return str1;
     }catch(string e){
-      //cout << "expr wrong\n";
       if(e == "match") cout <<"Not expecting " << names[input_token] << " in relation" <<endl;
       else cout << "Not expecting " << names[input_token] << " in " << e << endl;
       input_token = scan();
-      while(!contains(input_token, r_follow)&&input_token != t_eof){
+      cout << "deleted: " << names[input_token] << endl;
+            while(!contains(input_token, r_follow)&&input_token != t_eof){
             cout << "deleted: " << names[input_token] << endl;
             input_token = scan();
             cout << input_token<<endl;
@@ -530,12 +510,12 @@ string relation(){
         if(contains(input_token, r_follow)){
             hasError = 1;
             tabNum--;
-            cout << "follow token found" << endl;
+            cout << "follow token "<<names[input_token]<<" found" << endl;
             return "(error)\n";
         }else{} //If having reached eof
         tabNum--;
         return " eof";
-      }  //should be catching exception here
+      } 
 }
 
 int main () {
