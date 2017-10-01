@@ -52,6 +52,19 @@ string preIndent(string str, int tab){
   }
   return str;
 }
+string prefix(string str, string tail){
+  if(tail == "") return str;
+  for (int i = 0; i < tail.length(); ++i){
+    if(tail[i] == ' '){
+      return tail.substr(0,i)+" "+ str +" "+ tail.substr(i+1, tail.length() - i);
+    }
+  }
+  return "prefix error";
+}
+
+/*for(std::string::size_type i = 0; i < str.size(); ++i) {
+    do_things_with(str[i]);
+}*/
 //Check if a token is in first or follow set of some category
 int contains(token t, token set[]){
   int i = 0;
@@ -254,9 +267,9 @@ string expr () {
   tabNum++;
   try{
     string str1 = term ();
-    str1 += term_tail ();
+    string str2 = term_tail ();
     tabNum--;
-    return " "+ str1 +" ";
+    return prefix(str1, str2);
     }catch(string e){
       if(e == "match") cout <<"Not expecting " << names[input_token] << " in expression" <<endl;
       else cout << "Not expecting " << names[input_token] << " in " << e << endl;
@@ -297,7 +310,7 @@ string expr_tail(){
         string str1 = relation_op();
         string str2 = expr();
         tabNum--;
-        return " "+str1+str2;
+        return str1+" "+str2;
     }
     case t_id:
     case t_read:
@@ -319,10 +332,12 @@ string term_tail () {
     case t_add:
     case t_sub:{
         string str1 = add_op ();
+        str1 += " ";
         str1 += term ();
-        str1 += term_tail ();
+        string str2 = term_tail ();
         tabNum--;
-        return " "+str1+" ";
+        return prefix(str1,str2);
+        //return " "+str1+" ";
     }
     case t_rparen:
     case t_id:
@@ -341,9 +356,10 @@ string term () {
     cout << "T: input token: " << names[input_token] << endl;
   tabNum++;
   string str1 = factor ();
-  str1 += factor_tail ();
+  string str2 = factor_tail ();
   tabNum--;
-  return "("+str1+")";
+  //return "("+str1+str2+")";
+  return prefix(str1, str2);
   cout << "term wrong\n";
 }catch(string e){
   throw string("term");
@@ -360,6 +376,7 @@ string factor_tail () {
     case t_mul:
     case t_div:{
         string str1 = mul_op ();
+        //str1 += " ";
         string str2 = factor ();
         str1 += str2;
         str1 += factor_tail ();
@@ -493,13 +510,13 @@ string relation(){
     try{
       tabNum++;
       string str2 = expr();
-      str2 += expr_tail();
+      string str1 = expr_tail();
       tabNum--;
-      string str1 = "("+str2+ ")\n";
+      return "("+prefix(str2, str1)+ ")\n";
       // for(int i = 0; i <= tabNum; i++){
       //     str1 += " ";
       // }
-      return str1;
+      //return str1;
     }catch(string e){
       //cout << "expr wrong\n";
       if(e == "match") cout <<"Not expecting " << names[input_token] << " in relation" <<endl;
@@ -524,5 +541,6 @@ string relation(){
 int main () {
     input_token = scan ();
     cout << program ();
+    cout << prefix("23", "* 54");
     return 0;
 }
