@@ -17,6 +17,11 @@ using std::noskipws;
 
 
 char token_image[100];
+string image;
+
+std::string getImage(){
+  return " "+image;
+}
 
 token scan() {
     static char c = ' ';
@@ -29,7 +34,7 @@ token scan() {
     }
 
     cout << c << "\n";
-    if (isalpha(c)) {
+    if (isalpha(c)) { //TODO
         do {
             token_image[i++] = c;
             if(!cin.get(c)) break;
@@ -46,15 +51,20 @@ token scan() {
         else if (token_image==string("fi")) return t_fi;
         else if (token_image==string("check")) return t_check;
         //else if (token_image!=string(":=")) return t_gets;  //not colonequal
-        else return t_id;
+        else{
+          image = token_image;
+          return t_id;
+        }
+
           // literal = token_image;
     }
-    else if (isdigit(c)) {
+    else if (isdigit(c)) { //TODO
         do {
             token_image[i++] = c;
             cin.get(c);
         } while (isdigit(c));
         token_image[i] = '\0';
+        image = token_image;
         return t_literal;
     }
     else switch (c) {

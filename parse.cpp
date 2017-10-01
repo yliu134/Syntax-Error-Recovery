@@ -173,7 +173,8 @@ string stmt () {
         case t_id:{
             match (t_id);
             match (t_gets);
-            string str1 = "( := id " + relation();//Used to be expr()
+            string str1 = "( := (id "+getImage() +")" + relation();//Used to be expr()
+
           //   str1 = "(id := " + str1 + ")\n";
           //   for(int i = 0; i <= tabNum; i++){
           //     str1 = " " + str1;
@@ -243,8 +244,7 @@ string stmt () {
         hasError = 1;
         cout << "follow token found" << endl;
         return "(error)\n";
-    }else{
-            } //If having reached eof
+    }else{} //If having reached eof
             return "";
         }
 }
@@ -304,10 +304,10 @@ string expr_tail(){
     case t_write:
     case t_eof:
     tabNum--;
-    return "eps";
+    return "";
     default:
     tabNum--;
-    return "eps";
+    return "";
         //predict set ET -> epsilon = SL
 }
 }
@@ -330,9 +330,9 @@ string term_tail () {
     case t_write:
     case t_eof:
       tabNum--;
-      return "eps";          /*  epsilon production */
+      return "";          /*  epsilon production */
     default:
-      return "eps";
+      return "";
 }
 }
 
@@ -374,9 +374,9 @@ string factor_tail () {
     case t_write:
     case t_eof:
       tabNum--;
-      return "eps";          /*  epsilon production */
+      return "";          /*  epsilon production */
     default:
-      return "eps";
+      return "";
     }
 }
 
@@ -384,14 +384,18 @@ string factor () {
   cout << "F: input token: " << names[input_token] << endl;
   tabNum++;
   switch (input_token) {
-    case t_id :
-    match (t_id);
-    tabNum--;
-    return "id";
-    case t_literal:
-    match (t_literal);
-    tabNum--;
-    return "lit";
+    case t_id :{
+      match (t_id);
+      tabNum--;
+      string str1 = "(id"+getImage()+")";
+      return str1;
+    }
+    case t_literal:{
+      match (t_literal);
+      tabNum--;
+      string str1 = "lit"+getImage();
+      return str1;
+    }
     case t_lparen:{
     match (t_lparen);
     string str1 = relation ();
