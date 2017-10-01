@@ -23,61 +23,69 @@ class SyntaxErrorException : public exception{
     public:
         const char * what(token token, const char* nonterminal) const throw()
         {
-            // return "Found token "+names[token]+" in " +nonterminal+" "+"\n";
+            // return "Found token "+names[token]+" in " +nonterminal+""+"\n";
         }
 };*/
-//replace colonequal and doubleequal
+
 const char* names[] = {"check", "read", "write", "id", "literal", "gets", "if",
 "fi", "do", "od", "equal", "notequal", "smaller",
 "greater", "smallerequal","greaterequal",
-"add", "sub", "mul", "div", "lparen", "rparen", "eof", "eps", "end"};
+"add", "sub", "mul", "div", "lparen", "rparen", "eof", "eps"};
 
 static token input_token;
 static int tabNum = 0;
 static int hasError = 0;
+static token s_follow[] = {t_id, t_read, t_write, t_if, t_do, t_check, t_eof};
+static token r_follow[] = {t_id, t_read, t_write, t_if, t_do, t_check, t_eof, t_fi, t_rparen};
+static token e_follow[] = {t_id, t_read, t_write, t_if, t_do, t_check, t_eof, t_fi, t_rparen
+                        , t_equal, t_notequal, t_smaller, t_greater, t_smallerequal, t_greaterequal};
 
-static token s_follow[] = { };
-static token sl_follow[] = { };
-static token e_follow[] = { };
-static token r_follow[] = { };
-static token t_follow[] = { };
-static token f_follow[] = { };
-static token et_follow[] = { };
-static token tt_follow[] = { };
-static token ft_follow[] = { };
+string postIndent(string str, int tab){
+  for(int i = 0; i <= tab; i++){
+    str += " ";
+  }
+  return str;
+}
+string preIndent(string str, int tab){
+  for(int i = 0; i <= tab; i++){
+    str = " " + str;
+  }
+  return str;
+}
 //Check if a token is in first or follow set of some category
 int contains(token t, token set[]){
   int i = 0;
   while(set[i]){
-    if (set[i] == t) return 1;
-    i++;
-}
-return 0;
+    if (t == set[i++]) {
+      return 1;
+    }
+  }
+  cout << names[t] << " consumed" << endl;
+  return 0;
 }
 
 void error () {
-    cout << "Ahhh Syntax error" << endl;
+    cout << "Syntax error" << endl;
     exit (1);
 }
 
 string match (token expected) {
     cout << "expected: " << names[expected] << "; actual: " << names[input_token] << endl;
     if (input_token == expected) {
-
-        cout << "Matched " << endl;
+        cout << "Matched "<<names[expected] << endl;
         // cout << "match " <<  names[input_token];
-        if (input_token == t_id || input_token == t_literal) { }
-            //cout << ": " <<  token_image;
-
-            input_token = scan ();
+        //if (input_token == t_id || input_token == t_literal) { }
+          input_token = scan ();
+          cout << "match next: "<<names[input_token] << endl;
     }
     else{
-      cout << "match problem\n";
-      error ();
+      throw string("match");
   }
 
-  return " ";
+  return "";
 }
+
+
 
 string program ();
 string stmt_list ();
@@ -94,161 +102,191 @@ string mul_op ();
 string relation();
 
 string program () {
-    cout << "input token: " << names[input_token] << endl;  
+    cout << "P: input token: " << names[input_token] << endl;
     try{
         switch (input_token) {
             case t_id:
             case t_read:
             case t_write:
-            case t_end:{
+            case t_if:
+            case t_do:
+            case t_check:
+            case t_eof:{
+              tabNum++;
                 cout << "predict program -->stmt_list eof" << endl;
-                string str1 = "( program \n" ;
+                string str1 = "(program \n" ;
+                str1 = postIndent(str1, tabNum);
+                str1 += "[";
+
                 str1 += stmt_list ();
-                match (t_end);
-                str1 += " ";
-                str1 += names[t_end];
-                return str1 + " )";
+                match (t_eof);
+                str1 = postIndent(str1, tabNum);
+                str1 += "]\n";
+                return str1+")\n";
             }
             default:
             cout << "program wrong\n";
-            throw string("p"); 
-            return " ";
+            throw string("p");
+            return "";
         }
     }catch(string e){
-        cout << "Exception catched in Program!" << endl;
-        return " ";
+        cout << "Exception in "<< e <<" catched in Program!" << endl;
+        return "";
     }
 }
 
 string stmt_list () {
-  tabNum++;
+  cout << "SL: input token: " << names[input_token] << endl;
+  //tabNum++;
   switch (input_token) {
-    case t_id:
-    case t_read:
-    case t_write:{
-        cout << "predict stmt_list --> stmt stmt_list" << endl;
-        string str1 = "[ " + stmt ();
-        string str2 = stmt_list ();
-        str1 += str2;
-        for(int i = 0; i <= tabNum; i++){
-          str1 = "    " + str1;
+      case t_id:
+      case t_check:
+      case t_write:
+      case t_read:
+      case t_if:
+      case t_do:{
+        string str1 = "";
+        str1 = postIndent(str1, tabNum);
+        str1 += "("+stmt();
+        str1 += stmt_list();
+        str1 = postIndent(str1, tabNum);
+        str1 += ")\n";
+
+        tabNum--;
+        return str1;
       }
-      tabNum--;
-      return str1 + " ]\n";
-  }
-    case t_end:
-            return "( end ) ";          /*  epsilon production */
+      case t_eof:
+        //tabNum--;
+        return "\n";          /*  epsilon production */
     default:
-    cout << "statement list wrong\n";
-    throw string("sl");
-    return " ";
+      //tabNum--;
+      return "\n";
     }
 }
 
 string stmt () {
+  cout << "S: input token: " << names[input_token] << endl;
   tabNum++;
   try{
     switch (input_token) {
         case t_id:{
             match (t_id);
             match (t_gets);
-            string str1 = relation();//Used to be expr()
-            str1 = "(id := " + str1 + " )";
-            for(int i = 0; i <= tabNum; i++){
-              str1 = "    " + str1;
-          }
+            string str1 = "( := id " + relation();//Used to be expr()
+          //   str1 = "(id := " + str1 + ")\n";
+          //   for(int i = 0; i <= tabNum; i++){
+          //     str1 = " " + str1;
+          // }
           tabNum--;
           return str1;
       }
-      case t_read:
-      match (t_read);
-      match (t_id);
-      tabNum--;
-      return "(read id) ";;
+        case t_read:
+        match (t_read);
+        match (t_id);
+        tabNum--;
+        return "(read id)\n";
       case t_write:{
         match (t_write);
             string str1 = relation();//Used to be expr()
-            for(int i = 0; i <= tabNum; i++){
-              str1 = "    " + str1;
-          }
+            str1 = postIndent(str1, tabNum);
           tabNum--;
-          return "(write " + str1 + " )";
-      }
-      case t_if:{
-        string str1 = relation();
-        string str2 = stmt_list ();
-        match(t_fi);
-        str1 = "( " + str1 + str2 + ")";
-        for(int i = 0; i <= tabNum; i++){
-          str1 = "    " + str1;
-      }
-      tabNum--;
-      return str1;
-  }
-  case t_do:{
-    string str1 = stmt_list();
-    match(t_od);
-    tabNum--;
-    return "( do "+ str1 + "od) ";;
-}
-case t_check:{
-    string str1 = relation();
-    tabNum--;
-    return "( check "+str1+") ";;
-}
+          return "(write " + str1 + ")\n";
+        }
+        case t_if:{
+          match(t_if);
+          string str1 = "(if \n";
+          str1 = postIndent(str1, tabNum);
+          str1 += relation();
+          str1 = postIndent(str1, tabNum);
+          string str2  = stmt_list();
+          str2 = postIndent(str2, tabNum);
+          match(t_fi);
+          tabNum--;
+          return str1 +"if[\n"+ str2 + "]) if lol\n";
+        }
+        case t_do:{
+          match(t_do);
+          string str1 = "(do\n";
+          str1 += stmt_list();
+          str1 = postIndent(str1, tabNum);
+          match(t_od);
+          tabNum--;
+          return "do["+ str1 + "]) odddd\n";
+        }
+        case t_check:{
+          match(t_check);
+          string str1 = relation();
+          str1 = preIndent(str1, tabNum);
+          str1 = postIndent(str1, tabNum);
+          tabNum--;
+          return "(check\n"+str1+")\n";
+        }
         default: //SyntaxErrorException e; throw e; //Throw the exception
         cout << "statement wrong\n";
         error();
         tabNum--;
-        return " ";
+        return "";
+      }
     }catch(string e){
-        while(!contains(input_token, s_follow)
-            ||input_token != t_eof){
+      if(e == "match") cout <<"Not expecting " << names[input_token] << " in statement" <<endl;
+      else cout << "Not expecting " << names[input_token] << " in " << e << endl;
+      input_token = scan();
+      cout << "next: " << names[input_token] << endl;
+      while(!contains(input_token, s_follow)
+            &&input_token != t_eof){
+            cout << "deleted: " << names[input_token] << endl;
             input_token = scan();
+
     }
     if(contains(input_token, s_follow)){
         hasError = 1;
-        return "(error)";
+        cout << "follow token found" << endl;
+        return "(error)\n";
     }else{
-
             } //If having reached eof
-            return " ";
+            return "";
         }
-    }
 }
 
 string expr () {
+  cout << "E: input token: " << names[input_token] << endl;
   tabNum++;
-  cout << "input token: " << names[input_token] << endl;
   try{
     string str1 = term ();
     str1 += term_tail ();
     tabNum--;
-    return "( "+ str1 +")";
+    return " "+ str1 +" ";
     }catch(string e){
-        cout << "expr wrong\n"
-        while(!contains(input_token, e_follow)
-            ||input_token != t_eof){
+      if(e == "match") cout <<"Not expecting " << names[input_token] << " in expression" <<endl;
+      else cout << "Not expecting " << names[input_token] << " in " << e << endl;
+      while(!contains(input_token, e_follow)
+            &&input_token != t_eof){
+            cout << "deleted: " << names[input_token] << endl;
             input_token = scan();
+
        }
         if(contains(input_token, e_follow)){
             hasError = 1;
-            return "(error)";
+            tabNum--;
+            cout << "follow token found" << endl;
+            return "(error)\n";
         }else{
 
             } //If having reached eof
-            return " ";
+            tabNum--;
+            return "";
         }
   error ();
   tabNum--;
-  return " ";
+  return "";
 
 }
 // the new built method by us
 
 string expr_tail(){
+  cout << "ET: input token: " << names[input_token] << endl;
   tabNum++;
-  cout << "input token: " << names[input_token] << endl;  switch (input_token) {
+  switch (input_token) {
     case t_equal:
     case t_notequal:
     case t_smaller:
@@ -258,24 +296,23 @@ string expr_tail(){
         string str1 = relation_op();
         string str2 = expr();
         tabNum--;
-        return "( "+str1+str2+" ) ";;
+        return " "+str1+str2;
     }
     case t_id:
     case t_read:
     case t_write:
     case t_eof:
     tabNum--;
-    return " ";;
+    return "eps";
     default:
-    cout << "expr tail wrong\n";
-    throw string("et");
     tabNum--;
-    return " ";
+    return "eps";
         //predict set ET -> epsilon = SL
 }
 }
 
 string term_tail () {
+  cout << "TT: input token: " << names[input_token] << endl;
   tabNum++;
   cout << "input token: " << names[input_token] << endl;  switch (input_token) {
     case t_add:
@@ -284,46 +321,49 @@ string term_tail () {
         str1 += term ();
         str1 += term_tail ();
         tabNum--;
-        return "( "+str1+" ) ";;
+        return " "+str1+" ";
     }
     case t_rparen:
     case t_id:
     case t_read:
     case t_write:
     case t_eof:
-    tabNum--;
-            return " ";;          /*  epsilon production */
+      tabNum--;
+      return "eps";          /*  epsilon production */
     default:
-    cout << "term tail wrong\n";
-    throw string("tt");
-    tabNum--;
-    return " ";
+      return "eps";
 }
 }
 
 string term () {
+  try{
+    cout << "T: input token: " << names[input_token] << endl;
   tabNum++;
   string str1 = factor ();
-  str1 + factor_tail ();
+  str1 += factor_tail ();
   tabNum--;
-  return "( "+str1+" ) ";;
+  return "("+str1+")";
   cout << "term wrong\n";
+}catch(string e){
   throw string("t");
   tabNum--;
-  return " ";
+}
+  return "";
 
 }
 
 string factor_tail () {
+  cout << "FT: input token: " << names[input_token] << endl;
   tabNum++;
   switch (input_token) {
     case t_mul:
     case t_div:{
         string str1 = mul_op ();
-        str1 += factor ();
+        string str2 = factor ();
+        str1 += str2;
         str1 += factor_tail ();
         tabNum--;
-        return "( "+str1+" ) ";;
+        return str1+"";
     }
     case t_add:
     case t_sub:
@@ -332,138 +372,148 @@ string factor_tail () {
     case t_read:
     case t_write:
     case t_eof:
-    tabNum--;
-            return "Ha ";          /*  epsilon production */
+      tabNum--;
+      return "eps";          /*  epsilon production */
     default:
-    cout << "factor tail wrong\n";
-    throw string("ft");
-    tabNum--;
-    return " ";
-}
+      return "eps";
+    }
 }
 
 string factor () {
+  cout << "F: input token: " << names[input_token] << endl;
   tabNum++;
   switch (input_token) {
     case t_id :
     match (t_id);
     tabNum--;
-    return "Ha ";
+    return "id";
     case t_literal:
     match (t_literal);
     tabNum--;
-    return "Ha ";
-    case t_lparen:
+    return "lit";
+    case t_lparen:{
     match (t_lparen);
-    expr ();
+    string str1 = relation ();
     match (t_rparen);
     tabNum--;
-    return "Ha ";
+    return "("+str1+")";
+  }
     default:
     cout << "factor wrong\n";
     throw string("f");
     tabNum--;
-    return " ";
+    return "";
 }
 }
 // the new built one
 string relation_op(){
+  cout << "RO: input token: " << names[input_token] << endl;
   tabNum++;
   switch(input_token){
     case t_equal:
     match(t_equal);
     tabNum--;
-    return "Ha ";
+    return "== ";
     case t_notequal:
     match(t_notequal);
     tabNum--;
-    return "Ha ";
+    return "<> ";
     case t_smaller:
     match(t_smaller);
     tabNum--;
-    return "Ha ";
+    return "< ";
     case t_greater:
     match(t_greater);
     tabNum--;
-    return "Ha ";
+    return "> ";
     case t_smallerequal:
     match(t_smallerequal);
     tabNum--;
-    return "Ha ";
+    return "<= ";
     case t_greaterequal:
     match(t_greaterequal);
     tabNum--;
-    return "Ha ";
+    return ">= ";
     default:
     cout << "relatioon op wrong\n";
-    throw string("ro"); 
-    tabNum--; return " ";
+    throw string("ro");
+    tabNum--;
+    return "";
 }
 }
 
 string add_op () {
+  cout << "AO: input token: " << names[input_token] << endl;
   tabNum++;
   switch (input_token) {
     case t_add:
     match (t_add);
     tabNum--;
-    return "Ha ";
+    return "+ ";
     case t_sub:
     match (t_sub);
     tabNum--;
-    return "Ha ";
+    return "- ";
     default:
     cout << "add op wrong\n";
     throw string("ao");
     tabNum--;
-    return " ";
+    return "";
 }
 }
 
 string mul_op () {
   tabNum++;
-  cout << "input token: " << names[input_token] << endl;  switch (input_token) {
+  cout << "MO: input token: " << names[input_token] << endl;  switch (input_token) {
     case t_mul:
     printf ("predict mul_op --> mul\n");
     match (t_mul);
     tabNum--;
-    return "Ha ";
+    return "* ";
     case t_div:
     printf ("predict mul_op --> div\n");
     match (t_div);
     tabNum--;
-    return "Ha ";
+    return "/ ";
     default:
     tabNum--;
     cout << "mul op wrong\n";
     throw string("mo");
-    return " ";
+    return "";
 }
 }
 
 string relation(){
+  cout << "R: input token: " << names[input_token] << endl;
     try{
-  tabNum++;
-  expr();
-  expr_tail();
-  return " relation finished \n";
-}catch(string e){
-    cout << "expr wrong\n"
-        while(!contains(input_token, r_follow)
-            ||input_token != t_eof){
+      tabNum++;
+      string str2 = expr();
+      str2 += expr_tail();
+      tabNum--;
+      string str1 = "("+str2+ ")\n";
+      // for(int i = 0; i <= tabNum; i++){
+      //     str1 += " ";
+      // }
+      return str1;
+    }catch(string e){
+      //cout << "expr wrong\n";
+      if(e == "match") cout <<"Not expecting " << names[input_token] << " in relation" <<endl;
+      else cout << "Not expecting " << names[input_token] << " in " << e << endl;
+      input_token = scan();
+      while(!contains(input_token, r_follow)&&input_token != t_eof){
+            cout << "deleted: " << names[input_token] << endl;
             input_token = scan();
-       }
+            cout << input_token<<endl;
+        }
         if(contains(input_token, r_follow)){
             hasError = 1;
-            return "(error)";
-        }else{
-
-            } //If having reached eof
-            return " ";
-}
-  tabNum--;
-  cout << "relation wrong\n";
-    //should be catching exception here
+            tabNum--;
+            cout << "follow token found" << endl;
+            return "(error)\n";
+        }else{} //If having reached eof
+        tabNum--;
+        return " eof";
+      }  //should be catching exception here
 }
 
 int main () {
