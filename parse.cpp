@@ -122,15 +122,16 @@ string program () {
                 match (t_eof);
                 str1 = postIndent(str1, tabNum);
                 str1 += "]\n";
+                if(hasError) return "";
                 return str1+")\n";
             }
             default:
             cout << "program wrong\n";
-            throw string("p");
+            throw string("program");
             return "";
         }
     }catch(string e){
-        cout << "Exception in "<< e <<" catched in Program!" << endl;
+        cout << "Not expecting " << names[input_token] << " in program"<< endl;
         return "";
     }
 }
@@ -345,7 +346,7 @@ string term () {
   return "("+str1+")";
   cout << "term wrong\n";
 }catch(string e){
-  throw string("t");
+  throw string("term");
   tabNum--;
 }
   return "";
@@ -400,7 +401,7 @@ string factor () {
   }
     default:
     cout << "factor wrong\n";
-    throw string("f");
+    throw string("factor");
     tabNum--;
     return "";
 }
@@ -436,7 +437,7 @@ string relation_op(){
     return ">= ";
     default:
     cout << "relatioon op wrong\n";
-    throw string("ro");
+    throw string("relation operation");
     tabNum--;
     return "";
 }
@@ -456,7 +457,7 @@ string add_op () {
     return "- ";
     default:
     cout << "add op wrong\n";
-    throw string("ao");
+    throw string("arithmetic operator");
     tabNum--;
     return "";
 }
@@ -478,7 +479,7 @@ string mul_op () {
     default:
     tabNum--;
     cout << "mul op wrong\n";
-    throw string("mo");
+    throw string("multiplication operator");
     return "";
 }
 }
